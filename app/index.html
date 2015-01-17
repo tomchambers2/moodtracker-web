@@ -8,6 +8,9 @@
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
     <!-- build:css(.) styles/vendor.css -->
     <!-- bower:css -->
+    <link rel="stylesheet" href="bower_components/toastr/toastr.css" />
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="bower_components/angular-motion/dist/angular-motion.css" />
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
@@ -15,7 +18,9 @@
     <link rel="stylesheet" href="styles/signin.css">
     <link rel="stylesheet" href="styles/about.css">
     <link rel="stylesheet" href="styles/record.css">
+    <link rel="stylesheet" href="bower_components/ngtoast/dist/ngToast.min.css">
     <!-- endbuild -->
+    <link rel="stylesheet" href="bower_components/fontawesome/css/font-awesome.css">
   </head>
   <body ng-app="moodtrackerWebApp">
     <!--[if lt IE 7]>
@@ -24,15 +29,15 @@
 
     <!-- Add your site or application content here -->
     <div class="container">
-      <div class="header">
+      <div class="header" ng-controller="HeaderCtrl">
         <ul class="nav nav-pills pull-right">
-          <li><a ng-href="#/record">Record</a></li>
-          <li><a ng-href="#/">History</a></li>
-          <li><a ng-href="#/about">Graph</a></li>
-          <li><a ng-href="#/settings">Settings/API</a></li>
+          <li ng-class="{ active: isActive('/record')}"><a ng-href="#/record">Record</a></li>
+          <li ng-class="{ active: isActive('/')}"><a ng-href="#/" >History</a></li>
+          <li ng-class="{ active: isActive('/about')}"><a ng-href="#/about">Graph</a></li>
+          <li ng-class="{ active: isActive('/settings')}"><a ng-href="#/settings">Settings/API</a></li>
           <li><a ng-href="mailto:tom.chambers@gmail.com" target="_blank">Contact</a></li>
         </ul>
-        <h3 class="text-muted">Harmony - mood tracker</h3>
+        <h3 class="title">Harmony mood tracker</h3>
       </div>
 
       <div ng-view=""></div>
@@ -88,6 +93,12 @@
     <script src="bower_components/chartjs/Chart.min.js"></script>
     <script src="bower_components/Chart.js/Chart.min.js"></script>
     <script src="bower_components/ng-chartjs/dist/angular-chartjs.min.js"></script>
+    <script src="bower_components/angular-flash/dist/angular-flash.js"></script>
+    <script src="bower_components/toastr/toastr.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="bower_components/angular-strap/dist/angular-strap.js"></script>
+    <script src="bower_components/angular-strap/dist/angular-strap.tpl.js"></script>
+    <script src="bower_components/angular-growl/build/angular-growl.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
     <script src="bower_components/firebase/firebase.js"></script>
@@ -99,8 +110,14 @@
     <script src="scripts/controllers/about.js"></script>
     <script src="scripts/controllers/settings.js"></script>
     <script src="scripts/controllers/record.js"></script>
+    <script src="scripts/directives/syncchecker.js"></script>
+    <script src="scripts/filters/orderobjectby.js"></script>
+    <script src="scripts/controllers/header.js"></script>
     <!-- endbuild -->
     <script src="scripts/services.js"></script>
+    <script src="scripts/message-center.js"></script>
+
+    <script src="bower_components/ngtoast/dist/ngToast.js"></script>
 
     <script src="scripts/ui-bootstrap-tpls-0.9.0.min.js"></script>
 </body>

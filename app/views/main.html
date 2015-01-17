@@ -1,3 +1,5 @@
+<sync-checker></sync-checker>
+
 <div ng-if="!loggedIn">
   <div class="jumbotron">
     <h1>Track your emotional life</h1>
@@ -24,25 +26,26 @@
   </div>
 </div>
 
-<div ng-if="loggedIn">
-  <div class="row">
-    <div class="col-md-9">
-      <h2>Your mood history</h2>
-    </div>
-    <div class="col-md-3 pull-right text-right">
-      <button class="btn btn-danger" ng-click="doLogout()">Logout</button>
-    </div>
-
-    <div class="row">
-      <div class="col-md-12">
-        <table class="table">
-          <tr ng-repeat="entry in mood.data">
-            <td>{{entry.level}}</td>
-            <td>{{entry.timestamp | amDateFormat:'h:mm DD/MM/YY'}}</td>
-            <td><button class="btn btn-danger" ng-click="entry.splice($index, 1)">Delete</button></td>
-          </tr>
-        </table>
-      </div>
-    </div>
+<div class="row">
+  <div class="col-md-12">
+    <div class="alert alert-warning" ng-if="!mood.data">You haven't saved any moods yet, why not <a href="#/record">record</a> what you're feeling now?</div>
+    <table class="table">
+      <tr>
+        <td class="text-center"><strong>Mood level</strong></td>
+        <td></td>
+        <td><strong>Date</strong></td>
+        <td></td>
+      </tr>
+      <tr ng-repeat="entry in mood.data | orderObjectBy:'userTimestamp':true">
+        <td class="text-center">{{entry.level}}</td>
+        <td><div class="mood-bar mood-{{entry.level}}"></div></td>
+        <td><span am-time-ago="entry.userTimestamp"></span> - {{entry.userTimestamp | amDateFormat:'h:mm DD/MM/YY'}}</td>
+        <td>
+          <span ng-if="entry.offline"><i class="fa fa-exclamation-triangle"></i>
+        </td>
+        <!-- <td><span ng-if="!entry.synced===false" ng-click="entry.splice($index, 1)"><i class="fa fa-times"></span></td> -->
+      </tr>
+    </table>
+    <small><i class="fa fa-exclamation-triangle"></i> - indicates moods saved offline or anoymously</small>
   </div>
 </div>

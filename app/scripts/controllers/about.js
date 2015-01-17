@@ -8,7 +8,7 @@
  * Controller of the moodtrackerWebApp
  */
 angular.module('moodtrackerWebApp')
-  .controller('AboutCtrl', function ($scope, $connect, $auth) {
+  .controller('AboutCtrl', function ($scope, $data, $auth, $timeout) {
     $scope.loggedIn = $auth.check();
 
   	$scope.mood = {
@@ -20,35 +20,31 @@ angular.module('moodtrackerWebApp')
   		}
   	};
   	
-  	if (!$scope.loggedIn) return;
+    $data.getMoodlogNumbers(function(data) {        
+      var values = data;
 
-  	var ref = $connect.ref;
+      var dates = [];
+      var moodLevels = [];
+      for (var id in values) {
+        dates.push(moment(values[id].timestamp).format('h:mm DD/MM/YY'));
+        moodLevels.push(values[id].level);
+      }
 
-
-  	ref.child('moodlogNumbers').child($auth.getUserData().uid).on('value', function(data) {
-  		var values = data.val();
-
-  		var dates = [];
-  		var moodLevels = [];
-  		for (var id in values) {
-  			dates.push(moment(values[id].timestamp).format('h:mm DD/MM/YY'));
-  			moodLevels.push(values[id].level);
-  		}
-
-	  	$scope.mood = {
-	  		data: {
-	  			labels: dates,
-	  			datasets: [{
-	  				data: moodLevels
-	  			}]
-	  		}
-	  	};
-
-  		$scope.$apply();
-  	});
+      $timeout(function() {
+        $scope.mood = {
+          data: {
+            labels: dates,
+            datasets: [{
+              data: moodLevels
+            }]
+          }
+        };
+      })
+    });    
 
     $scope.chartOptions = {
         segementStrokeWidth: 20,
-        segmentStrokeColor: '#78B5EB'
+        segmentStrokeColor: '#78B5EB',
+        datasetFill: false
     };  	
   });

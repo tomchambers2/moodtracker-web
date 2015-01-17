@@ -1,3 +1,15 @@
+.alerts {
+	position: relative;
+}
+
+.alert-container {
+	position: absolute;
+	left: 0px;
+	right: 0px;
+	top: 0px;
+	bottom: 0px;
+}
+
 .mood-buttons {
 	text-align: center;
 }
@@ -9,37 +21,72 @@
 	font-weight: bold;
 }
 
-.mood-button.mood-1 {
+.mood-button:hover {
+    background-color:rgba(0, 0, 0, 0.1);
+}
+
+.mood-bar {
+	height: 20px;
+}
+
+.mood-bar.mood-1 {
+	width: 15px;
+}
+.mood-bar.mood-2 {
+	width: 30px;
+}
+.mood-bar.mood-3 {
+	width: 45px;
+}
+.mood-bar.mood-4 {
+	width: 60px;
+}
+.mood-bar.mood-5 {
+	width: 75px;
+}
+.mood-bar.mood-6 {
+	width: 90px;
+}
+.mood-bar.mood-7 {
+	width: 105px;
+}
+.mood-bar.mood-8 {
+	width: 120px;
+}
+.mood-bar.mood-9 {
+	width: 135px;
+}
+.mood-bar.mood-10 {
+	width: 150px;
+}
+
+.mood-1 {
 	background: #000;
 }
-.mood-button.mood-2 {
+.mood-2 {
 	background: #16258E;
 }
-.mood-button.mood-3 {
+.mood-3 {
 	background: #35539F;
 }
-.mood-button.mood-4 {
+.mood-4 {
 	background: #A8B9E7;
-	//color: #fff;
 }
-.mood-button.mood-5 {
+.mood-5 {
 	background: #D4D8D7;
-	//color: #000;
 }
-.mood-button.mood-6 {
+.mood-6 {
 	background: #B5E7E7;
-	//color: #000;
 }
-.mood-button.mood-7 {
+.mood-7 {
 	background: #83E7C4;
-	//color: #000;
 }
-.mood-button.mood-8 {
+.mood-8 {
 	background: #6BE793;
 }
-.mood-button.mood-9 {
+.mood-9 {
 	background: #46E765;
 }
-.mood-button.mood-10 {
+.mood-10 {
 	background: #51E700;
 }

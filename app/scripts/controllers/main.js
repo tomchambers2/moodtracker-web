@@ -8,25 +8,25 @@
  * Controller of the moodtrackerWebApp
  */
 angular.module('moodtrackerWebApp')
-  .controller('MainCtrl', function ($scope, $connect, $data, $auth) {
+  .controller('MainCtrl', function ($scope, $connect, $data, $sync, $auth, $timeout, messenger) {
   	$scope.loggedIn = $auth.check();
 
   	$scope.loginForm = {};
 
     var ref = $connect.ref;
 
-  	if ($scope.loggedIn) {
-	  	$scope.mood = {};
-	  	ref.child('moodlogNumbers').child($auth.getUserData().uid).on('value', function(data) {
-	  		console.log('got data',data.val());
-	  		$scope.mood.data = data.val();
-	  		console.log($scope.mood.data)
-	  		$scope.$apply();
-	  	}, function(err) {
-        console.log('failed to get mood data',err);
-      });
-  	}
+    console.log($auth.getUserData());
 
+    var showMoodData = function() {
+      $scope.mood = {};
+      $data.getMoodlogNumbers(function(data) {        
+        $timeout(function() {
+          $scope.mood.data = data;
+        });
+      });
+    };
+
+    showMoodData();
 
 	var afterLogin = function(error, authData) {
 		if (error) { 
@@ -36,7 +36,11 @@ angular.module('moodtrackerWebApp')
 		$scope.loggedIn = $auth.check();
 		$scope.$apply();
 
-    $data.sync();
+    $sync.sync();
+
+    showMoodData();
+
+    messenger.success('Logged in');
 	};
 
   	$scope.doLogin = function() {
@@ -47,11 +51,16 @@ angular.module('moodtrackerWebApp')
   	}
 
   	$scope.doRegister = function() {
-  		$auth.doRegister($scope.loginForm.email, $scope.loginForm.password);
-  	}
-
-  	$scope.doLogout = function() {
-  		$connect.ref.unauth();
-  		$scope.loggedIn = $auth.check();
+  		ref.createUser({
+        email    : $scope.loginForm.email,
+        password : $scope.loginForm.password
+      }, function(error) {
+        if (error) {
+          console.log(error);
+          return;
+          messenger.success('Created account');
+        }
+        $scope.doLogin($scope.loginForm.email, $scope.loginForm.password);
+      });
   	}
   });

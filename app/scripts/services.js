@@ -1,5 +1,15 @@
 'use strict';
 
+angular.module('variantTools', [])
+
+.service('messenger', [function() {
+  return {
+    warning: toastr.warning,
+    error: toastr.error,
+    success: toastr.success
+  }
+}])
+
 angular.module('moodLogging', [])
 
 .factory('$connect', [function() {
@@ -8,24 +18,29 @@ angular.module('moodLogging', [])
   };
 }])
 
-.factory('$auth', ['$connect', function($connect) {
+.factory('$auth', ['$connect','$localStorage','messenger', function($connect,$localStorage,messenger) {
   var ref = $connect.ref;
 
   var afterLogin = function(error, authData) {
     if (error) { console.log(error); }
     console.log(authData);
+    messenger.sucess('Logged in');
   };
+
+  var self = this;
 
   return {
     check: function() {
       var authData = ref.getAuth();
-      console.log('Checking login',!!authData);
       return !!authData;
+    },
+
+    uid: function() {
+      return ref.getAuth().uid;
     },
 
     getUserData: function() {
       var authData = ref.getAuth();
-      console.log('Checking login',authData);
       return authData;
     },    
 
@@ -36,54 +51,186 @@ angular.module('moodLogging', [])
       }, afterLogin));
     },
 
-    doRegister: function() {
-
+    doRegister: function(email, password) {
+      
     },
 
     doLogout: function() {
       console.log('Logging out');
+
+      $localStorage.set('moodCache', null);
+
+      messenger.success('Logged out');
+
       return $connect.ref.unauth();
     }
   };
 }])
 
-.service('$data', ['$connect', '$auth', '$localStorage', function($connect, $auth, $localStorage) {
+.service('$data', ['$connect', '$auth', '$localStorage', '$connection', 'messenger', function($connect, $auth, $localStorage, $connection, messenger) {
   var ref = $connect.ref;
+
+  var appendOfflineData = function(data) {
+    var localData = $localStorage.getObject($auth.uid+'offlineMoods');
+
+    for (var i = 0; i < localData.length; i++) {
+      localData[i].offline = true;
+      data[localData[i].userTimestamp] = localData[i];
+    };
+
+    return data;
+  }
+
+  var appendUnauthData = function(data) {
+    var anonData = $localStorage.getObject('moods');
+
+    console.log('appending to',data);
+
+    for (var i = 0; i < anonData.length; i++) {
+      anonData[i].offline = true;
+      data[anonData[i].userTimestamp] = anonData[i];
+    };
+    return data;
+  }  
+
+  var getMoodlogNumbers = function(callback) {
+    if ($connection.getStatus() && $auth.check()) {
+      //online and logged in - show them their data + offline data + unauth data
+      console.log('Online. Authed. Showing fb data + offline + unauth');
+      ref.child('moodlogNumbers').child($auth.getUserData().uid).on('value', function(rawData) {
+        var data = rawData.val();
+        if (!data) {
+          data = {};
+        }
+        var appendedData = appendOfflineData(data);
+        appendedData = appendUnauthData(appendedData);
+        callback(appendedData);   
+      }, function(err) {
+        console.log('failed to get mood data',err);
+      }); 
+    } else if ($auth.check()) {
+      console.log('Offline. Authed. Showing offline + unauth');
+      //authenticated, but not online - use this user's cached data + offline + unauth
+      data = {};
+      var appendedData = appendOfflineData(data);
+      appendedData = appendUnauthData(appendedData);
+      callback(appendedData);  
+
+      ref.child('moodlogNumbers').child($auth.getUserData().uid).on('value', function(rawData) {
+        var data = rawData.val();
+        if (!data) {
+          data = {};
+        }
+        var appendedData = appendOfflineData(data);
+        appendedData = appendUnauthData(appendedData);
+        callback(appendedData);  
+        console.log('Came online and updated with fb data');
+      }, function(err) {
+        console.log('failed to get mood data',err);
+      }); 
+    } else {
+      console.log('Offline. Unauthed. Showing unauth');
+      var data = {};
+      //user is offline and not authed - show unauth data
+      var appendedData = appendUnauthData(data);
+      callback(appendedData);      
+    }
+  };
+
+  var saveMood = function(mood) {
+    var data = {
+        level: mood,
+        serverTimestamp: Firebase.ServerValue.TIMESTAMP,
+        userTimestamp: Date.now()
+    };
+
+    if (!$auth.check()) {
+      $localStorage.push('moods', data);
+      messenger.warning('You\'re not logged in. Mood saved locally. Login or register to sync.');
+    };
+
+    if (!$connection.getStatus()) {
+      $localStorage.push($auth.uid+'offlineMoods', data);
+      messenger.warning('You\'re offline. Mood saved locally. Will be synced automatically when next online');
+      return;
+    };
+
+    var authData = $auth.getUserData();
+    if (authData) {
+      ref.child('moodlogNumbers').child(authData.uid).push(data, function(error) {
+        if (error) {
+          console.log(error, 'Mood logging failed');
+          messenger.error('Something went wrong and your mood wasn\'t saved')
+          return;
+        }
+
+        messenger.success('Mood saved successfully');
+      });      
+    }
+  };   
+
+  return {
+    ref: ref,
+    getMoodlogNumbers: getMoodlogNumbers,
+    saveMood: saveMood
+  };
+}])
+
+.service('$sync', ['$connect', '$auth', '$localStorage', '$rootScope','$timeout','messenger', function($connect, $auth, $localStorage, $rootScope, $timeout, messenger) {
+  var ref = $connect.ref;
+
+  var doSync = function(key) {
+    var data = $localStorage.getObject(key);
+    if (data.length>0) {
+      for (var i = data.length - 1; i >= 0; i--) {
+        ref.child('moodlogNumbers').child($auth.getUserData().uid).push(data[i], function(error) {
+          if (error) {
+            messenger.danger('Aborting due to sync failure');
+            throw new Error("error syncing", error, 'user data:', $auth.getUserData());
+          } else {
+            $localStorage.pop(key);
+            $rootScope.$apply();
+          }
+        });
+      }
+      messenger.success('Synced '+data.length+' records');
+    }        
+  };  
 
   var sync = function() {
     if ($auth.check()) {
-      var localData = $localStorage.getObject('offlineMoods');
-
-      var anonData = $localStorage.getObject('moods');
-
-      var doSync = function(data) {
-        if (data) {
-          for (var i = 0; i < data.length; i++) {
-            ref.child('moodlogNumbers').child($auth.getUserData().uid).push(data[i], function(error) {
-              if (error) {
-                console.log("error syncing", error, $auth.getUserData());
-              }
-            });
-          }
-        }        
+      var createLocalCache = function(data) {
+        $localStorage.setObject('moodCache', data)
       };
 
-      doSync(localData);
-      doSync(anonData);
-    } else {
-      console.log('Tried to sync but user is not logged in');
+      ref.child('moodlogNumbers').child($auth.getUserData().uid).on('value', function(data) {
+        createLocalCache(data.val());
+      }, function(err) {
+        console.log('failed to get mood data',err);
+      });
+
+      doSync($auth.uid+'offlineMoods');
+
+      var unauthSync = function() {
+        doSync('moods');
+      };
+
+      var unauthLength = $localStorage.length('moods');
+      if (unauthLength) {
+        $rootScope.$emit('unauthSync', unauthLength, unauthSync);
+      };
     }
   };
 
   return {
-    ref: ref,
-    sync: sync
-  };
+    sync: sync,
+    
+  }
 }]);
 
 angular.module('utils', [])
 
-.factory('$localStorage', ['$window', function($window) {
+.factory('$localStorage', ['$window','$rootScope', function($window, $rootScope) {
   return {
     set: function(key, value) {
       $window.localStorage[key] = value;
@@ -106,20 +253,41 @@ angular.module('utils', [])
       }
       data.push(value);
       $window.localStorage[key] = JSON.stringify(data);
+    },
+    length: function(key) {
+      var data = $window.localStorage[key];
+      if (data) {
+        data = JSON.parse(data);
+      } else {
+        data = [];
+      }
+      return data.length;      
+    },
+    pop: function(key) {
+      var data = $window.localStorage[key];
+      if (data) {
+        data = JSON.parse(data);
+        var index = data.length - 1;
+        data.splice(index, 1);
+      } else {
+        data = [];
+      }
+      $window.localStorage[key] = JSON.stringify(data);
+      $rootScope.$apply();
     }
   };
 }])
 
-.service('$connection', ['$data', function($data) {
+.service('$connection', ['$sync', function($sync) {
   var connectedRef = new Firebase('https://moodtrackerapp.firebaseio.com/.info/connected');
 
   var status;
 
   connectedRef.on('value', function(snap) {
-    if (snap.val() === true) {
+    if (snap.val()) {
       status = true;
 
-      $data.sync();
+      $sync.sync();
     } else {
       status = false;
     }
