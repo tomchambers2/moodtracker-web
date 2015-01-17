@@ -10,21 +10,23 @@ angular.module('moodtrackerWebApp')
   .directive('syncChecker', function ($rootScope, $timeout) {
     return {
       restrict: 'E',
-      template: '<alert ng-if="alert.msg" type="info" close="close.alert()">{{alert.msg}} <button class="btn btn-success" ng-click="alert.callback()">Sync data</button></alert>',
+      template: '<div class="alert alert-warning text-center" role="alert" ng-if="alert.msg" type="info" close="close.alert()"><p><i class="fa fa-exclamation-triangle"></i> {{alert.msg}}</p> <p><button class="btn btn-success" ng-click="sync()">Sync data</button> <button class="btn btn-danger" ng-click="clear()">Delete data</button></p></div>',
       link: function postLink(scope, element, attrs) {
-        var close = {};
-      	close.alert = function() {
-      		$timeout(function() {
-      			scope.alert = {};
-      		});
-      	};
-
-      	$rootScope.$on('unauthSync', function(data, number, callback) {
+      	$rootScope.$on('unauthSync', function(data, number, callback, clearCallback) {
       		$timeout(function() {
 	      		scope.alert = {
-	      			msg: 'You have '+number+' unsynced anonymous moods saved. Do you want to sync them with this account?',
-	      			callback: callback
-	      		}
+	      			msg: 'You have '+number+' unsynced anonymous mood records. Do you want to sync them with this account?',
+	      		};
+
+            scope.sync = function() {
+              callback();
+              scope.alert = null;
+            };
+
+            scope.clear = function() {
+              clearCallback();
+              scope.alert = null;
+            }
       		});
       	});
       }

@@ -73,6 +73,11 @@ angular.module('moodLogging', [])
   var appendOfflineData = function(data) {
     var localData = $localStorage.getObject($auth.uid+'offlineMoods');
 
+    if (!localData.length) return data;
+    if (!data) {
+      data = {};
+    };
+
     for (var i = 0; i < localData.length; i++) {
       localData[i].offline = true;
       data[localData[i].userTimestamp] = localData[i];
@@ -84,7 +89,10 @@ angular.module('moodLogging', [])
   var appendUnauthData = function(data) {
     var anonData = $localStorage.getObject('moods');
 
-    console.log('appending to',data);
+    if (!anonData.length) return data;
+    if (!data) {
+      data = {};
+    };    
 
     for (var i = 0; i < anonData.length; i++) {
       anonData[i].offline = true;
@@ -99,9 +107,6 @@ angular.module('moodLogging', [])
       console.log('Online. Authed. Showing fb data + offline + unauth');
       ref.child('moodlogNumbers').child($auth.getUserData().uid).on('value', function(rawData) {
         var data = rawData.val();
-        if (!data) {
-          data = {};
-        }
         var appendedData = appendOfflineData(data);
         appendedData = appendUnauthData(appendedData);
         callback(appendedData);   
@@ -111,26 +116,22 @@ angular.module('moodLogging', [])
     } else if ($auth.check()) {
       console.log('Offline. Authed. Showing offline + unauth');
       //authenticated, but not online - use this user's cached data + offline + unauth
-      data = {};
+      data = null;
       var appendedData = appendOfflineData(data);
       appendedData = appendUnauthData(appendedData);
       callback(appendedData);  
 
       ref.child('moodlogNumbers').child($auth.getUserData().uid).on('value', function(rawData) {
         var data = rawData.val();
-        if (!data) {
-          data = {};
-        }
         var appendedData = appendOfflineData(data);
         appendedData = appendUnauthData(appendedData);
         callback(appendedData);  
-        console.log('Came online and updated with fb data');
       }, function(err) {
         console.log('failed to get mood data',err);
       }); 
     } else {
       console.log('Offline. Unauthed. Showing unauth');
-      var data = {};
+      var data = null;
       //user is offline and not authed - show unauth data
       var appendedData = appendUnauthData(data);
       callback(appendedData);      
@@ -215,9 +216,14 @@ angular.module('moodLogging', [])
         doSync('moods');
       };
 
+      var unauthClear = function() {
+        $localStorage.setObject('moods', []);
+        $rootScope.$apply();
+      };
+
       var unauthLength = $localStorage.length('moods');
       if (unauthLength) {
-        $rootScope.$emit('unauthSync', unauthLength, unauthSync);
+        $rootScope.$emit('unauthSync', unauthLength, unauthSync, unauthClear);
       };
     }
   };

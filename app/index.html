@@ -9,8 +9,7 @@
     <!-- build:css(.) styles/vendor.css -->
     <!-- bower:css -->
     <link rel="stylesheet" href="bower_components/toastr/toastr.css" />
-    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
-    <link rel="stylesheet" href="bower_components/angular-motion/dist/angular-motion.css" />
+    <link rel="stylesheet" href="bower_components/fontawesome/css/font-awesome.css" />
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
@@ -18,9 +17,7 @@
     <link rel="stylesheet" href="styles/signin.css">
     <link rel="stylesheet" href="styles/about.css">
     <link rel="stylesheet" href="styles/record.css">
-    <link rel="stylesheet" href="bower_components/ngtoast/dist/ngToast.min.css">
     <!-- endbuild -->
-    <link rel="stylesheet" href="bower_components/fontawesome/css/font-awesome.css">
   </head>
   <body ng-app="moodtrackerWebApp">
     <!--[if lt IE 7]>
@@ -66,8 +63,8 @@
     <![endif]-->
     <!-- endbuild -->
 
+    <!-- build:js(.) scripts/vendor.js -->  
     <script src="bower_components/moment/moment.js"></script>
-    <!-- build:js(.) scripts/vendor.js -->
     <!-- bower:js -->
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/angular/angular.js"></script>
@@ -93,16 +90,11 @@
     <script src="bower_components/chartjs/Chart.min.js"></script>
     <script src="bower_components/Chart.js/Chart.min.js"></script>
     <script src="bower_components/ng-chartjs/dist/angular-chartjs.min.js"></script>
-    <script src="bower_components/angular-flash/dist/angular-flash.js"></script>
     <script src="bower_components/toastr/toastr.js"></script>
-    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
-    <script src="bower_components/angular-strap/dist/angular-strap.js"></script>
-    <script src="bower_components/angular-strap/dist/angular-strap.tpl.js"></script>
-    <script src="bower_components/angular-growl/build/angular-growl.js"></script>
     <!-- endbower -->
-    <!-- endbuild -->
     <script src="bower_components/firebase/firebase.js"></script>
-    <script src="bower_components/angularfire/dist/angularfire.min.js"></script>
+    <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+    <!-- endbuild -->
 
     <!-- build:js({.tmp,app}) scripts/scripts.js -->
     <script src="scripts/app.js"></script>
@@ -113,12 +105,8 @@
     <script src="scripts/directives/syncchecker.js"></script>
     <script src="scripts/filters/orderobjectby.js"></script>
     <script src="scripts/controllers/header.js"></script>
-    <!-- endbuild -->
     <script src="scripts/services.js"></script>
-    <script src="scripts/message-center.js"></script>
+    <!-- endbuild -->
 
-    <script src="bower_components/ngtoast/dist/ngToast.js"></script>
-
-    <script src="scripts/ui-bootstrap-tpls-0.9.0.min.js"></script>
 </body>
 </html>

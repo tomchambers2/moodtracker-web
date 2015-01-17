@@ -1,31 +1,45 @@
 
-
 <h2 ng-if="!loggedIn" class="jumbotron"><a href="#/">Login or register</a> to use the API</h2>
 
-<div ng-if="loggedIn" class="col-md-3 pull-right text-right">
-	<button class="btn btn-danger" ng-click="doLogout()">Logout {{userEmail}}</button>
+<div class="row">
+	<div ng-if="loggedIn" class="col-md-6 pull-right text-right">
+		<button class="btn btn-danger" ng-click="doLogout()">Logout {{userEmail}}</button>
+	</div>
 </div>
 
-<section ng-if="loggedIn">
-	<h2>API</h2>
-	<h3>Your auth token</h3>
-	<input class="form-control" type="text" value="{{authToken}}" size="35" />
+<div class="col-md-6"></div>
 
-	<h3>Endpoints</h3>
-	<pre>
-		<table>
-			<tr>
-				<td>PUT</td>
-				<td>http://moodtrackerapp.firebase.io/moodlogNumbers/{{userId}}.json</td>
-			</tr>
-			<tr>
-				<td>GET</td>
-				<td>http://moodtrackerapp.firebase.io/moodlogNumbers/{{userId}}.json</td>
-			</tr>
-			<tr>
-				<td>DELETE</td>
-				<td>http://moodtrackerapp.firebase.io/moodlogNumbers/{{userId}}.json</td>
-			</tr>			
-		</table>
-	</pre>
-</section>
+<div class="row">
+	<div class="col-md-12" ng-if="loggedIn">	
+		<h2>API</h2>
+		<h3>Your auth token</h3>
+		<input class="form-control" type="text" value="{{authToken}}" size="35" />
+	
+		<h3>Endpoints</h3>
+		<pre>
+			<table>
+				<tr>
+					<td>GET</td>
+					<td>http://moodtrackerapp.firebase.io/moodlogNumbers/{{userId}}.json&auth={{authToken}}</td>
+				</tr>
+				<tr>
+					<td>PUT</td>
+					<td>http://moodtrackerapp.firebase.io/moodlogNumbers/{{userId}}.json&auth={{authToken}}</td>
+				</tr>
+				<tr>
+					<td>POST</td>
+					<td>http://moodtrackerapp.firebase.io/moodlogNumbers/{{userId}}.json&auth={{authToken}}</td>
+				</tr>		
+				<tr>
+					<td>PATCH</td>
+					<td>http://moodtrackerapp.firebase.io/moodlogNumbers/{{userId}}.json&auth={{authToken}}</td>
+				</tr>										
+				<tr>
+					<td>DELETE</td>
+					<td>http://moodtrackerapp.firebase.io/moodlogNumbers/{{userId}}.json&auth={{authToken}}</td>
+				</tr>			
+			</table>
+		</pre>
+		For documentation please see the <a href="https://www.firebase.com/docs/rest/api/" target="_blank">firebase API</a>
+	</div>
+</div>

@@ -11,9 +11,10 @@ angular.module('moodtrackerWebApp')
   .controller('SettingsCtrl', function ($scope, $auth) {
   	$scope.loggedIn = $auth.check();
 
-  	$scope.userEmail = $auth.getUserData() && $auth.getUserData().password.email;
-  	$scope.userId = $auth.getUserData() && $auth.getUserData().uid;
-  	$scope.authToken = $auth.getUserData().token;
+  	var userData = $auth.getUserData();
+  	$scope.userEmail = userData && userData.password.email;
+  	$scope.userId = userData && userData.uid;
+  	$scope.authToken = userData && userData.token;
 
   	$scope.doLogout = function() {
       $auth.doLogout();
