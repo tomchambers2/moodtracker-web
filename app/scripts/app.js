@@ -21,7 +21,8 @@ angular
     'angularMoment',
     'chartjs',
     'ui.bootstrap',
-    'variantTools'
+    'variantTools',
+    'n3-line-chart'
   ])
   .config(function ($routeProvider) {
     $routeProvider

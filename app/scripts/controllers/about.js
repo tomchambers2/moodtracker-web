@@ -11,40 +11,50 @@ angular.module('moodtrackerWebApp')
   .controller('AboutCtrl', function ($scope, $data, $auth, $timeout) {
     $scope.loggedIn = $auth.check();
 
-  	$scope.mood = {
-  		data: {
-  			labels: [],
-  			datasets: [{
-  				data: []
-  			}]
-  		}
-  	};
+
+$scope.options = {
+  axes: {
+    x: {type: "date", key: "x"},
+    y: {type: "linear", min: 0, max: 10, ticks: 10 }
+  },
+  series: [
+    {
+      y: "val_0",
+      label: "Mood records",
+      color: "#9467bd",
+      axis: "y",
+      type: "line",
+      thickness: "3px",
+      dotSize: 2,
+      id: "series_0"
+    }
+  ],
+  tooltip: {
+    mode: "scrubber",
+    formatter: function (x, y, series) {
+      return moment(x).fromNow() + ' : ' + y;
+    }
+  },
+  stacks: [],
+  lineMode: "bundle",
+  tension: 1,
+  drawLegend: true,
+  drawDots: true,
+  columnsHGap: 5
+};
   	
     $data.getMoodlogNumbers(function(data) {        
-      var values = data;
-
-      var dates = [];
-      var moodLevels = [];
-      for (var id in values) {
-        dates.push(moment(values[id].timestamp).format('h:mm DD/MM/YY'));
-        moodLevels.push(values[id].level);
+      $scope.mood = {
+        data: []
       }
-
-      $timeout(function() {
-        $scope.mood = {
-          data: {
-            labels: dates,
-            datasets: [{
-              data: moodLevels
-            }]
-          }
+      var lastWeek = moment().subtract(60, 'minutes');
+      for (var id in data) {
+        if (moment(data[id].userTimestamp).isBefore(lastWeek)) {
+          continue;
         };
-      })
-    });    
-
-    $scope.chartOptions = {
-        segementStrokeWidth: 20,
-        segmentStrokeColor: '#78B5EB',
-        datasetFill: false
-    };  	
+        var entry = {x: new Date(data[id].userTimestamp), val_0: data[id].level}
+        $scope.mood.data.push(entry);
+        $scope.$apply();
+      }
+    });      	
   });

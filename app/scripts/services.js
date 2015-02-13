@@ -7,8 +7,8 @@ angular.module('variantTools', [])
     warning: toastr.warning,
     error: toastr.error,
     success: toastr.success
-  }
-}])
+  };
+}]);
 
 angular.module('moodLogging', [])
 
@@ -20,12 +20,6 @@ angular.module('moodLogging', [])
 
 .factory('$auth', ['$connect','$localStorage','messenger', function($connect,$localStorage,messenger) {
   var ref = $connect.ref;
-
-  var afterLogin = function(error, authData) {
-    if (error) { console.log(error); }
-    console.log(authData);
-    messenger.sucess('Logged in');
-  };
 
   var self = this;
 
@@ -42,17 +36,6 @@ angular.module('moodLogging', [])
     getUserData: function() {
       var authData = ref.getAuth();
       return authData;
-    },    
-
-    doLogin: function(email, password) {
-      console.log(ref.authWithPassword({
-        email    : email,
-        password : password
-      }, afterLogin));
-    },
-
-    doRegister: function(email, password) {
-      
     },
 
     doLogout: function() {
@@ -67,7 +50,7 @@ angular.module('moodLogging', [])
   };
 }])
 
-.service('$data', ['$connect', '$auth', '$localStorage', '$connection', 'messenger', function($connect, $auth, $localStorage, $connection, messenger) {
+.service('$data', ['$connect', '$q', '$auth', '$localStorage', '$connection', 'messenger', function($connect, $q, $auth, $localStorage, $connection, messenger) {
   var ref = $connect.ref;
 
   var appendOfflineData = function(data) {
@@ -119,7 +102,7 @@ angular.module('moodLogging', [])
       data = null;
       var appendedData = appendOfflineData(data);
       appendedData = appendUnauthData(appendedData);
-      callback(appendedData);  
+      callback(appendedData);
 
       ref.child('moodlogNumbers').child($auth.getUserData().uid).on('value', function(rawData) {
         var data = rawData.val();
@@ -170,10 +153,29 @@ angular.module('moodLogging', [])
     }
   };   
 
+  var deleteRecord = function(id) {
+
+    return $q(function(resolve, reject) {
+      var onComplete = function(error) {
+        if (error) {
+          console.log('failed');
+          reject();
+        } else {
+          console.log('worked');
+          resolve();
+        }
+      };
+
+      var authData = $auth.getUserData();
+      ref.child('moodlogNumbers').child(authData.uid).child(id).remove(onComplete);
+    });
+  };
+
   return {
     ref: ref,
     getMoodlogNumbers: getMoodlogNumbers,
-    saveMood: saveMood
+    saveMood: saveMood,
+    deleteRecord: deleteRecord
   };
 }])
 
@@ -184,13 +186,13 @@ angular.module('moodLogging', [])
     var data = $localStorage.getObject(key);
     if (data.length>0) {
       for (var i = data.length - 1; i >= 0; i--) {
+        $localStorage.pop(key);
         ref.child('moodlogNumbers').child($auth.getUserData().uid).push(data[i], function(error) {
           if (error) {
-            messenger.danger('Aborting due to sync failure');
+            messenger.error('Aborting due to sync failure');
             throw new Error("error syncing", error, 'user data:', $auth.getUserData());
           } else {
-            $localStorage.pop(key);
-            $rootScope.$apply();
+
           }
         });
       }
@@ -279,7 +281,6 @@ angular.module('utils', [])
         data = [];
       }
       $window.localStorage[key] = JSON.stringify(data);
-      $rootScope.$apply();
     }
   };
 }])

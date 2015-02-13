@@ -1,15 +1,16 @@
 <sync-checker></sync-checker>
 
 <div ng-if="!loggedIn">
-  <div class="jumbotron">
+  <div class="jumbotron main">
     <h1>Track your emotional life</h1>
     <p class="lead">
-      Harmony is a simple web and iphone app for mood tracking
+      Harmony is a simple web and iPhone app for mood tracking
     </p>
   </div>
 
   <div class="row marketing">
           <form class="form-signin">
+          <a id="login" />
           <h2>Register or login</h2>
           <label for="inputEmail" class="sr-only">Email address</label>
           <input type="email" id="inputEmail" class="form-control" placeholder="Email address" ng-model="loginForm.email" required>
@@ -28,12 +29,12 @@
 
 <div class="row">
   <div class="col-md-12">
-    <div class="alert alert-warning" ng-if="!mood.data">You haven't saved any moods yet, try <a href="#/record">recording</a> what you're feeling now.</div>
     <table class="table">
       <tr>
         <td class="text-center"><strong>Mood level</strong></td>
         <td></td>
         <td><strong>Date</strong></td>
+        <td></td>
         <td></td>
       </tr>
       <tr ng-repeat="entry in mood.data | orderObjectBy:'userTimestamp':true">
@@ -43,9 +44,10 @@
         <td>
           <span ng-if="entry.offline"><i class="fa fa-exclamation-triangle"></i>
         </td>
-        <!-- <td><span ng-if="!entry.synced===false" ng-click="entry.splice($index, 1)"><i class="fa fa-times"></span></td> -->
+        <td ng-click="deleteRecord(entry.id)"><span ng-if="!entry.synced"><i class="fa fa-times remove-button"></span></td>
       </tr>
     </table>
+    <div class="alert alert-warning" ng-if="!mood.data">You haven't saved any moods yet, try <a href="#/record">recording</a> what you're feeling now.</div>
     <small><i class="fa fa-exclamation-triangle"></i> - indicates moods saved offline or anoymously</small>
   </div>
 </div>

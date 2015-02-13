@@ -2,7 +2,7 @@
 <html class="no-js">
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <title>Harmony Mood Tracker App</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
@@ -28,13 +28,18 @@
     <div class="container">
       <div class="header" ng-controller="HeaderCtrl">
         <ul class="nav nav-pills pull-right">
+          <li ng-class="{ active: isActive('/')}"><a ng-href="#/" >Home</a></li>
           <li ng-class="{ active: isActive('/record')}"><a ng-href="#/record">Record</a></li>
-          <li ng-class="{ active: isActive('/')}"><a ng-href="#/" >History</a></li>
           <li ng-class="{ active: isActive('/about')}"><a ng-href="#/about">Graph</a></li>
-          <li ng-class="{ active: isActive('/settings')}"><a ng-href="#/settings">Settings/API</a></li>
+          <li ng-class="{ active: isActive('/settings')}"><a ng-href="#/settings">Settings</a></li>
           <li><a ng-href="mailto:tom.chambers@gmail.com" target="_blank">Contact</a></li>
+          <li ng-if="!loggedIn && !isActive('/')"><a href="/#/#login">Login</a></li>
+          <li ng-if="!loggedIn && isActive('/')"><a ng-click="scrollToLogin()">Login</a></li>
+          <li ng-if="loggedIn"><a ng-click="logout()">Logout</a></li>
         </ul>
-        <h3 class="title">Harmony</h3>
+        <h3 class="title">
+          <img src="/images/logo.png" height="45px" width="" alt="harmony mood tracker">
+        </h3>
       </div>
 
       <div ng-view=""></div>
@@ -94,6 +99,8 @@
     <!-- endbower -->
     <script src="bower_components/firebase/firebase.js"></script>
     <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+    <script src="bower_components/n3-line-chart/build/line-chart.js"></script>
+    <script src="bower_components/d3/d3.js"></script>
     <!-- endbuild -->
 
     <!-- build:js({.tmp,app}) scripts/scripts.js -->
