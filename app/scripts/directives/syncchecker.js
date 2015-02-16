@@ -7,7 +7,7 @@
  * # syncChecker
  */
 angular.module('moodtrackerWebApp')
-  .directive('syncChecker', function ($rootScope, $timeout) {
+  .directive('syncChecker', function ($rootScope, $timeout, $sync) {
     return {
       restrict: 'E',
       template: '<div class="alert alert-warning text-center" role="alert" ng-if="alert.msg" type="info" close="close.alert()"><p><i class="fa fa-exclamation-triangle"></i> {{alert.msg}}</p> <p><button class="btn btn-success" ng-click="sync()">Sync data</button> <button class="btn btn-danger" ng-click="clear()">Delete data</button></p></div>',
@@ -29,6 +29,8 @@ angular.module('moodtrackerWebApp')
             }
       		});
       	});
+
+        $sync.checkUnauthSync();
       }
     };
   });

@@ -1,15 +1,5 @@
 'use strict';
 
-angular.module('variantTools', [])
-
-.service('messenger', [function() {
-  return {
-    warning: toastr.warning,
-    error: toastr.error,
-    success: toastr.success
-  };
-}]);
-
 angular.module('moodLogging', [])
 
 .factory('$connect', [function() {
@@ -39,8 +29,6 @@ angular.module('moodLogging', [])
     },
 
     doLogout: function() {
-      console.log('Logging out');
-
       $localStorage.set('moodCache', null);
 
       messenger.success('Logged out');
@@ -50,10 +38,12 @@ angular.module('moodLogging', [])
   };
 }])
 
-.service('$data', ['$connect', '$q', '$auth', '$localStorage', '$connection', 'messenger', function($connect, $q, $auth, $localStorage, $connection, messenger) {
+.service('$data', ['$connect', '$q', '$auth', '$localStorage', '$connection', 'messenger', '$rootScope', function($connect, $q, $auth, $localStorage, $connection, messenger, $rootScope) {
   var ref = $connect.ref;
 
   var appendOfflineData = function(data) {
+    if (!$auth.uid) return;
+
     var localData = $localStorage.getObject($auth.uid+'offlineMoods');
 
     if (!localData.length) return data;
@@ -62,8 +52,9 @@ angular.module('moodLogging', [])
     };
 
     for (var i = 0; i < localData.length; i++) {
-      localData[i].offline = true;
+      localData[i].offline = 'offline';
       data[localData[i].userTimestamp] = localData[i];
+      data[localData[i].userTimestamp].id = localData[i].userTimestamp;
     };
 
     return data;
@@ -78,46 +69,57 @@ angular.module('moodLogging', [])
     };    
 
     for (var i = 0; i < anonData.length; i++) {
-      anonData[i].offline = true;
+      anonData[i].offline = 'unauth';
       data[anonData[i].userTimestamp] = anonData[i];
+      data[anonData[i].userTimestamp].id = anonData[i].userTimestamp;
     };
     return data;
   }  
 
   var getMoodlogNumbers = function(callback) {
+    var data;
+
+    function appendData() {
+      for (var id in data) {
+        data[id].id = id;
+      }
+      var appendedData = appendOfflineData(data);
+      appendedData = appendUnauthData(appendedData);
+      console.log('sending appended data',appendedData);
+      callback(appendedData);  
+    }
+
+    $rootScope.$on('moods_changed', function() {
+      appendData();
+      callback(appendedData);       
+    });
+
     if ($connection.getStatus() && $auth.check()) {
       //online and logged in - show them their data + offline data + unauth data
       console.log('Online. Authed. Showing fb data + offline + unauth');
       ref.child('moodlogNumbers').child($auth.getUserData().uid).on('value', function(rawData) {
-        var data = rawData.val();
-        var appendedData = appendOfflineData(data);
-        appendedData = appendUnauthData(appendedData);
-        callback(appendedData);   
+        data = rawData.val();
+        appendData();
       }, function(err) {
-        console.log('failed to get mood data',err);
+        throw new Error('failed to get mood data',err);
       }); 
     } else if ($auth.check()) {
       console.log('Offline. Authed. Showing offline + unauth');
       //authenticated, but not online - use this user's cached data + offline + unauth
       data = null;
-      var appendedData = appendOfflineData(data);
-      appendedData = appendUnauthData(appendedData);
-      callback(appendedData);
+      appendData();
 
       ref.child('moodlogNumbers').child($auth.getUserData().uid).on('value', function(rawData) {
-        var data = rawData.val();
-        var appendedData = appendOfflineData(data);
-        appendedData = appendUnauthData(appendedData);
-        callback(appendedData);  
+        data = rawData.val();
+        appendData();  
       }, function(err) {
-        console.log('failed to get mood data',err);
+        throw new Error('failed to get mood data',err);
       }); 
     } else {
       console.log('Offline. Unauthed. Showing unauth');
-      var data = null;
+      data = null;
       //user is offline and not authed - show unauth data
-      var appendedData = appendUnauthData(data);
-      callback(appendedData);      
+      appendData();     
     }
   };
 
@@ -143,9 +145,8 @@ angular.module('moodLogging', [])
     if (authData) {
       ref.child('moodlogNumbers').child(authData.uid).push(data, function(error) {
         if (error) {
-          console.log(error, 'Mood logging failed');
           messenger.error('Something went wrong and your mood wasn\'t saved')
-          return;
+          throw new Error(error, 'Mood logging failed');
         }
 
         messenger.success('Mood saved successfully');
@@ -153,21 +154,31 @@ angular.module('moodLogging', [])
     }
   };   
 
-  var deleteRecord = function(id) {
+  var deleteRecord = function(id, offline) {
+    var authData = $auth.getUserData();
+
+    console.log('deleting',id,offline);
 
     return $q(function(resolve, reject) {
-      var onComplete = function(error) {
-        if (error) {
-          console.log('failed');
-          reject();
-        } else {
-          console.log('worked');
-          resolve();
-        }
-      };
-
-      var authData = $auth.getUserData();
-      ref.child('moodlogNumbers').child(authData.uid).child(id).remove(onComplete);
+      if (offline==='offline') {
+        id = parseInt(id, 10);
+        $localStorage.removeByUserTimestamp($auth.uid+'offlineMoods',id);
+        $rootScope.$broadcast('moods_changed');
+      } else if (offline==='unauth') {
+        id = parseInt(id, 10);
+        $localStorage.removeByUserTimestamp('moods',id);
+        $rootScope.$broadcast('moods_changed');
+      } else { 
+        var onComplete = function(error) {
+          if (error) {
+            reject();
+          } else {
+            resolve();
+          }
+        };
+        console.log("ID",id);
+        ref.child('moodlogNumbers').child(authData.uid).child(id).remove(onComplete);
+      }
     });
   };
 
@@ -186,19 +197,37 @@ angular.module('moodLogging', [])
     var data = $localStorage.getObject(key);
     if (data.length>0) {
       for (var i = data.length - 1; i >= 0; i--) {
-        $localStorage.pop(key);
         ref.child('moodlogNumbers').child($auth.getUserData().uid).push(data[i], function(error) {
           if (error) {
             messenger.error('Aborting due to sync failure');
             throw new Error("error syncing", error, 'user data:', $auth.getUserData());
           } else {
-
+            $localStorage.pop(key);
+            $rootScope.$emit('moods_changed');
           }
         });
       }
       messenger.success('Synced '+data.length+' records');
     }        
   };  
+
+  var unauthSync = function() {
+    doSync('moods');
+  };
+
+  var unauthClear = function() {
+    $localStorage.setObject('moods', []);
+    $rootScope.$emit('moods_changed');
+    messenger.success('Deleted anonymous moods');
+  };  
+
+  var checkUnauthSync = function() {
+    if (!$auth.check()) return;
+    var unauthLength = $localStorage.length('moods');
+    if (unauthLength) {
+      $rootScope.$emit('unauthSync', unauthLength, unauthSync, unauthClear);
+    };
+  };      
 
   var sync = function() {
     if ($auth.check()) {
@@ -209,19 +238,10 @@ angular.module('moodLogging', [])
       ref.child('moodlogNumbers').child($auth.getUserData().uid).on('value', function(data) {
         createLocalCache(data.val());
       }, function(err) {
-        console.log('failed to get mood data',err);
+        throw new Error('failed to get mood data',err);
       });
 
       doSync($auth.uid+'offlineMoods');
-
-      var unauthSync = function() {
-        doSync('moods');
-      };
-
-      var unauthClear = function() {
-        $localStorage.setObject('moods', []);
-        $rootScope.$apply();
-      };
 
       var unauthLength = $localStorage.length('moods');
       if (unauthLength) {
@@ -232,7 +252,7 @@ angular.module('moodLogging', [])
 
   return {
     sync: sync,
-    
+    checkUnauthSync: checkUnauthSync
   }
 }]);
 
@@ -280,6 +300,17 @@ angular.module('utils', [])
       } else {
         data = [];
       }
+      $window.localStorage[key] = JSON.stringify(data);
+    },
+    removeByUserTimestamp: function(key, userTimestamp) {
+      var data = $window.localStorage[key];
+      if (data) {
+        data = JSON.parse(data);
+        data = _.reject(data, { userTimestamp: userTimestamp });
+      } else {
+        data = [];
+      }
+
       $window.localStorage[key] = JSON.stringify(data);
     }
   };

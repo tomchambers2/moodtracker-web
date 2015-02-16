@@ -15,8 +15,6 @@ angular.module('moodtrackerWebApp')
 
   var ref = $connect.ref;
 
-  console.log($auth.getUserData());
-
   var showMoodData = function() {
     $scope.mood = {};
     $data.getMoodlogNumbers(function(data) {        
@@ -25,15 +23,14 @@ angular.module('moodtrackerWebApp')
           data[id].id = id; 
         }
         $scope.mood.data = data;
-        console.log("data changed",$scope.mood.data);
       });
     });
   };
 
   showMoodData();
 
-  $scope.deleteRecord = function(id) {
-    $data.deleteRecord(id).then(function() {
+  $scope.deleteRecord = function(id, offline) {
+    $data.deleteRecord(id, offline).then(function() {
       messenger.success('Mood record deleted');
     }, function() {
       messenger.error('Couldn\'t delete mood record');
@@ -77,9 +74,25 @@ angular.module('moodtrackerWebApp')
       if (error) {
         messenger.error(error.message);
         return;
-        messenger.success('Created account');
       }
+      messenger.success('Created account');
       $scope.doLogin($scope.loginForm.email, $scope.loginForm.password);
     });
 	}
-  });
+
+  $scope.resetForm = {};
+  $scope.doPasswordReset = function() {
+    ref.resetPassword({
+      email: $scope.resetForm.email
+    }, function(error) {
+      if (error) {
+        messenger.error(error.message);
+        throw new Error('Could not reset password',$scope.resetForm.email);
+      }
+      messenger.success('Your new password has been emailed to'+$scope.resetForm.email);
+      $timeout(function() {
+        $scope.resetForm.email = '';
+      })
+    });
+  }  
+});

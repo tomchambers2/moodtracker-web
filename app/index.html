@@ -34,18 +34,18 @@
           <li ng-class="{ active: isActive('/settings')}"><a ng-href="#/settings">Settings</a></li>
           <li><a ng-href="mailto:tom.chambers@gmail.com" target="_blank">Contact</a></li>
           <li ng-if="!loggedIn && !isActive('/')"><a href="/#/#login">Login</a></li>
-          <li ng-if="!loggedIn && isActive('/')"><a ng-click="scrollToLogin()">Login</a></li>
-          <li ng-if="loggedIn"><a ng-click="logout()">Logout</a></li>
+          <li ng-if="!loggedIn && isActive('/')" ng-cloak><a ng-click="scrollToLogin()">Login</a></li>
+          <li ng-if="loggedIn" ng-cloak><a ng-click="logout()">Logout</a></li>
         </ul>
         <h3 class="title">
-          <img src="/images/logo.png" height="45px" width="" alt="harmony mood tracker">
+          <img src="/images/logo.png" height="45px" width="" class="logo" alt="harmony mood tracker">
         </h3>
       </div>
 
       <div ng-view=""></div>
 
       <div class="footer">
-        <p>Created by Tom Chambers in 2014</p>
+        <p>Created by <a href="http://tomchambers.me">Tom Chambers</a> in 2014</p>
       </div>
     </div>
 
@@ -101,6 +101,7 @@
     <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
     <script src="bower_components/n3-line-chart/build/line-chart.js"></script>
     <script src="bower_components/d3/d3.js"></script>
+    <script src="bower_components/lodash/lodash.min.js"></script>
     <!-- endbuild -->
 
     <!-- build:js({.tmp,app}) scripts/scripts.js -->
@@ -113,6 +114,7 @@
     <script src="scripts/filters/orderobjectby.js"></script>
     <script src="scripts/controllers/header.js"></script>
     <script src="scripts/services.js"></script>
+    <script src="scripts/messenger.js"></script>
     <!-- endbuild -->
 
 </body>
