@@ -9,6 +9,8 @@
  */
 angular.module('moodtrackerWebApp')
   .controller('AboutCtrl', function ($scope, $data, $auth, $timeout) {
+    mixpanel.track('history');
+
     $scope.loggedIn = $auth.check();
 
 

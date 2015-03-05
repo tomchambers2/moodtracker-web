@@ -6,6 +6,31 @@ $icon-font-path: "../bower_components/bootstrap-sass-official/assets/fonts/boots
 @import "bootstrap-sass-official/assets/stylesheets/_bootstrap.scss";
 // endbower
 
+.panel {
+  padding: 10px;
+}
+
+.cf:before,
+.cf:after {
+    content: " "; /* 1 */
+    display: table; /* 2 */
+}
+
+.cf:after {
+    clear: both;
+}
+
+.app-store-title {
+  float: left;
+}
+h3.app-store-title {
+  margin: 0;
+  line-height: 40px;  
+}
+div.app-store-title {
+  padding-right: 35px;
+}
+
 li a {
   cursor: pointer;
 }

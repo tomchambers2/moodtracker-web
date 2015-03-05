@@ -9,7 +9,9 @@
  */
 angular.module('moodtrackerWebApp')
   .controller('SettingsCtrl', function ($scope, $auth, $connect, messenger, $sync) {
-  	$scope.loggedIn = $auth.check();
+  	mixpanel.track('settings');
+
+    $scope.loggedIn = $auth.check();
     var ref = $connect.ref;
 
     $scope.email = $auth.getUserData() && $auth.getUserData().password.email;
